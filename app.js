@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const flash = require('connect-flash');
@@ -9,8 +10,12 @@ var keys = require('./config/keys');
 // Passport Config
 require('./config/passport')(passport);
 
+// Cors
+app.use(cors());
+
 // Bodyparser
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Express Session
 app.use(session({

@@ -60,7 +60,11 @@ router.post('/login', (req, res, next) => {
   passport.authenticate('local', {
     failureFlash: true
   }, function(error, user, info) {
-    res.send('🔓');
+    if (user) {
+      res.send('🔓');
+    } else {
+      res.send(info.message);
+    }
   })(req, res, next);
 });
 
