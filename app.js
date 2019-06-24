@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
-const flash = require('connect-flash');
 
 const app = express();
 var keys = require('./config/keys');
@@ -28,19 +27,18 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Connect flash
-app.use(flash());
-
-// Global Vars
-app.use((req, res, next) => {
-  res.locals.success_msg = req.flash('success_msg');
-  res.locals.error_msg = req. flash('error_msg');
-  res.locals.error = req.flash('error');
-  next();
-});
-
 // Routes
 app.use('/users', require('./routes/users'));
+
+// Error Handling
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  console.log(err.message);
+  res.json({
+    message: err.message,
+    error: req.app.get('env') === 'development' ? err: {}
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

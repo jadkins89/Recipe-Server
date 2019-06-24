@@ -8,20 +8,19 @@ const User = require('../database/User');
 
 // Register Handle
 router.post('/register', (req, res, next) => {
-  const {first_name, last_name, email, password, password2 } = req.body;
+  console.log(req.body);
+  const {firstName, lastName, email, password } = req.body;
   let errors = [];
   
   // Check required fields
-  if (!first_name || !last_name || !email || !password || !password2) {
+  if (!firstName || !lastName || !email || !password) {
     errors.push({ msg: 'Please fill in all fields' });
   }
   
-  // CHeck passwords match
-  if (password != password2) {
-    errors.push({ msg: 'Passwords do not match' });
+  // Check password length
+  if (password.length < 6) {
+    errors.push({ msg: 'Password must be at least 6 characters long' });
   }
-  
-  // Write check for password specifics
   
   if (errors.length > 0) {
     next(new Error(errors));
@@ -35,8 +34,8 @@ router.post('/register', (req, res, next) => {
         next(new Error(errors));
       } else {
         const newUser = {
-          first_name,
-          last_name,
+          firstName,
+          lastName,
           email,
           password
         };
@@ -46,8 +45,8 @@ router.post('/register', (req, res, next) => {
             newUser.password = hash;
             User.create(newUser)
             .then(user => {
-              req.flash('success_msg', 'You are now registered and can log in');
-              res.send('✅');
+              // req.flash('success_msg', 'You are now registered and can log in');
+              res.send("✅");
             })
             .catch(err => console.log(err));
           }));
@@ -61,17 +60,18 @@ router.post('/login', (req, res, next) => {
     failureFlash: true
   }, function(error, user, info) {
     if (user) {
-      res.send('🔓');
+      res.send(user);
     } else {
-      res.send(info.message);
+      const error = new Error(info.message);
+      error.status = 401;
+      return next(error);
     }
   })(req, res, next);
 });
 
 router.get('/logout', (req, res) => {
   req.logout();
-  req.flash('success_msg', 'You are logged out');
-  res.send('✌️');
+  res.send("✌️");
 })
 
 module.exports = router;

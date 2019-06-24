@@ -32,7 +32,7 @@ module.exports = {
     return new Promise(function(resolve, reject) {
       connection.query(
         'INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)', 
-        [newUser.first_name, newUser.last_name, newUser.email, newUser.password],
+        [newUser.firstName, newUser.lastName, newUser.email, newUser.password],
         (error, results, fields) => {
           if (error) {
             reject(error);
