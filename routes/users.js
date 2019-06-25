@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 
 // User Model
 const User = require('../database/User');
@@ -45,7 +46,6 @@ router.post('/register', (req, res, next) => {
             newUser.password = hash;
             User.create(newUser)
             .then(user => {
-              // req.flash('success_msg', 'You are now registered and can log in');
               res.send("✅");
             })
             .catch(err => console.log(err));
@@ -56,11 +56,22 @@ router.post('/register', (req, res, next) => {
 });
 
 router.post('/login', (req, res, next) => {
-  passport.authenticate('local', {
-    failureFlash: true
-  }, function(error, user, info) {
+  passport.authenticate('local', { session: false }, 
+  (error, user, info) => {
     if (user) {
-      res.send(user);
+      delete user.password;
+      var loggedUser = {
+        ...user
+      }
+      req.login(loggedUser, { session: false }, (error) => {
+        if (error) {
+          res.send(error);
+        }
+        
+        // console.log(loggedUser);
+        const token = jwt.sign(loggedUser, 'your_jwt_secret');
+        return res.json({loggedUser, token});
+      });
     } else {
       const error = new Error(info.message);
       error.status = 401;
@@ -72,6 +83,6 @@ router.post('/login', (req, res, next) => {
 router.get('/logout', (req, res) => {
   req.logout();
   res.send("✌️");
-})
+});
 
 module.exports = router;
