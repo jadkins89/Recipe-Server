@@ -1,13 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const passport = require('passport');
+const express = require("express");
+const cors = require("cors");
+const passport = require("passport");
 
 const app = express();
-var keys = require('./config/keys');
-const connection = require('./database/connection');
+var keys = require("./config/keys");
+const connection = require("./database/connection");
 
 // Passport Config
-require('./config/passport');
+require("./config/passport");
 
 // Cors
 app.use(cors());
@@ -17,8 +17,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Routes
-app.use('/users', require('./routes/users'));
-app.use('/auth', passport.authenticate('jwt', { session: false }), require('./routes/auth'));
+app.use("/users", require("./routes/users"));
+app.use("/recipes", require("./routes/recipes"));
+app.use(
+  "/auth",
+  passport.authenticate("jwt", { session: false }),
+  require("./routes/auth")
+);
 
 // Error Handling
 app.use((err, req, res, next) => {
@@ -26,7 +31,7 @@ app.use((err, req, res, next) => {
   console.log(err.message);
   res.json({
     message: err.message,
-    error: req.app.get('env') === 'development' ? err: {}
+    error: req.app.get("env") === "development" ? err : {}
   });
 });
 
