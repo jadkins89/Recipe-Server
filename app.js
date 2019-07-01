@@ -18,7 +18,11 @@ app.use(express.json());
 
 // Routes
 app.use("/users", require("./routes/users"));
-app.use("/recipes", require("./routes/recipes"));
+app.use(
+  "/recipes",
+  passport.authenticate("jwt", { session: false }),
+  require("./routes/recipes")
+);
 app.use(
   "/auth",
   passport.authenticate("jwt", { session: false }),

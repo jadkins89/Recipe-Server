@@ -61,7 +61,6 @@ module.exports = {
     return new Promise(function(resolve, reject) {
       addRecipe(name)
         .then(res => {
-          console.log(res.insertId);
           Promise.all([
             addTime(res.insertId, time),
             addArrayItem(res.insertId, "ingredients", ingredients),

@@ -17,21 +17,44 @@ const domains = {
 const Recipe = require("../database/Recipe");
 
 router.post("/add", (req, res, next) => {
-  var { url } = req.body;
-  let domain = parseDomain(url).domain;
-  domains[domain](url)
-    .then(recipe => {
-      Recipe.create(recipe)
-        .then(results => {
-          res.send(results);
-        })
-        .catch(error => {
-          res.send(error);
-        });
+  var { recipe } = req.body;
+  Recipe.create(recipe)
+    .then(results => {
+      res.send(results);
     })
     .catch(error => {
       res.send(error);
     });
 });
+
+router.post("/find", (req, res, next) => {
+  var { url } = req.body;
+  let domain = parseDomain(url).domain;
+  domains[domain](url)
+    .then(recipe => {
+      res.send(recipe);
+    })
+    .catch(error => {
+      res.send(error);
+    });
+});
+
+// router.post("/add", (req, res, next) => {
+//   var { url } = req.body;
+//   let domain = parseDomain(url).domain;
+//   domains[domain](url)
+//     .then(recipe => {
+//       Recipe.create(recipe)
+//         .then(results => {
+//           res.send(results);
+//         })
+//         .catch(error => {
+//           res.send(error);
+//         });
+//     })
+//     .catch(error => {
+//       res.send(error);
+//     });
+// });
 
 module.exports = router;

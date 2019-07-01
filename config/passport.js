@@ -37,22 +37,6 @@ passport.use(
   )
 );
 
-// passport.serializeUser((user, done) => {
-//   console.log(user);
-//   done(null, user.id);
-// });
-//
-// passport.deserializeUser((id, done) => {
-//   console.log(id);
-//   User.findById(id)
-//   .then(user => {
-//     done(null, user);
-//   })
-//   .catch(error => {
-//     done(error, null);
-//   });
-// });
-
 passport.use(
   new JWTStrategy(
     {
