@@ -18,6 +18,7 @@ const Recipe = require("../database/Recipe");
 
 router.post("/add", (req, res, next) => {
   var { recipe } = req.body;
+  console.log(req.body);
   Recipe.create(recipe)
     .then(results => {
       res.send(results);
@@ -31,7 +32,7 @@ router.post("/find", (req, res, next) => {
   var { url } = req.body;
   let domain = parseDomain(url).domain;
   if (domains[domain] === undefined) {
-    next(new Error("Site not supported"));
+    next(new Error("Site not yet supported, please enter manually below"));
   } else {
     domains[domain](url)
       .then(recipe => {
