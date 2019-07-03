@@ -17,9 +17,8 @@ const domains = {
 const Recipe = require("../database/Recipe");
 
 router.post("/add", (req, res, next) => {
-  var { recipe } = req.body;
-  console.log(req.body);
-  Recipe.create(recipe)
+  var { recipe, user_id } = req.body;
+  Recipe.create(recipe, user_id)
     .then(results => {
       res.send(results);
     })
@@ -28,7 +27,7 @@ router.post("/add", (req, res, next) => {
     });
 });
 
-router.post("/find", (req, res, next) => {
+router.post("/scrape", (req, res, next) => {
   var { url } = req.body;
   let domain = parseDomain(url).domain;
   if (domains[domain] === undefined) {
@@ -42,6 +41,18 @@ router.post("/find", (req, res, next) => {
         res.send(error);
       });
   }
+});
+
+router.get("/find/:recipeId", (req, res, next) => {
+  console.log("hit the recipe id");
+  let id = req.params.recipeId;
+  Recipe.findById(id)
+    .then(recipe => {
+      res.send(recipe);
+    })
+    .catch(error => {
+      res.send(error);
+    });
 });
 
 module.exports = router;
