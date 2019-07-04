@@ -29,9 +29,9 @@ const allRecipes = url => {
           }
         });
 
-        Recipe.time.prep = $("time[itemprop=prepTime]").text();
-        Recipe.time.cook = $("time[itemprop=cookTime]").text();
-        Recipe.time.ready = $("time[itemprop=totalTime]").text();
+        Recipe.time.prep = $("time[itemprop=prepTime]").text() || "";
+        Recipe.time.cook = $("time[itemprop=cookTime]").text() || "";
+        Recipe.time.ready = $("time[itemprop=totalTime]").text() || "";
 
         resolve(Recipe);
       } else {

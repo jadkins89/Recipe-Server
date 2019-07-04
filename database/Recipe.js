@@ -33,47 +33,23 @@ function findByUser() {}
 
 function findById(id) {
   let recipe = {};
-  return Promise.all([
-    getById(id),
-    getArrayItem(id, "ingredients"),
-    getArrayItem(id, "instructions")
-  ])
-    .then(results => {
-      console.log(results);
-      resolve(results);
-    })
-    .catch(error => {
-      reject(error);
-    });
-  // return new Promise((resolve, reject) => {
-  //   connection.query(
-  //     `SELECT * FROM recipes WHERE recipes.id=${id}`,
-  //     (error, results, fields) => {
-  //       if (error) {
-  //         reject(error);
-  //       } else {
-  //         recipe.name = results[0].name;
-  //         connection.query(
-  //           `SELECT order_id, instruction FROM instructions WHERE recipe_id=${id}`,
-  //           (error, results, fields) => {
-  //             if (error) {
-  //               reject(error);
-  //             } else {
-  //               results.sort((a, b) => {
-  //                 return b.order_id - a.order_id;
-  //               });
-  //               recipe.instructions = results.map(item => {
-  //                 return item.instruction;
-  //               });
-  //               console.log(recipe);
-  //             }
-  //           }
-  //         );
-  //         resolve(results);
-  //       }
-  //     }
-  //   );
-  // });
+  return new Promise((resolve, reject) => {
+    Promise.all([
+      getOneById(id, "recipes"),
+      getOneById(id, "time"),
+      getArrayItem(id, "ingredients"),
+      getArrayItem(id, "instructions")
+    ])
+      .then(results => {
+        results.map(item => {
+          Object.assign(recipe, item);
+        });
+        resolve(recipe);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 }
 
 // Utility Functions
@@ -156,22 +132,38 @@ function getArrayItem(recipe_id, tableName) {
         if (error) {
           reject(error);
         } else {
-          resolve(results);
+          results.sort((a, b) => {
+            return b.order_id - a.order_id;
+          });
+          let items = [];
+          results.map(item => {
+            items.push(item[itemName]);
+          });
+          resolve({ [tableName]: items });
         }
       }
     );
   });
 }
 
-function getById(id) {
+function getOneById(id, tableName) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT * FROM recipes WHERE recipes.id=${id}`,
+      `SELECT * FROM ${tableName} WHERE id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
         } else {
-          resolve(results);
+          let resultObj = {};
+          if (results.length == 0) {
+            reject(new Error("No Results"));
+          } else if (tableName === "recipes") {
+            resultObj.name = results[0].name;
+          } else {
+            delete results[0].id;
+            resultObj.time = JSON.parse(JSON.stringify(results[0]));
+          }
+          resolve(resultObj);
         }
       }
     );

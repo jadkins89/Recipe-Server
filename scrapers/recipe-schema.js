@@ -7,6 +7,7 @@ function Recipe() {
     cook: "",
     active: "",
     inactive: "",
+    ready: "",
     total: ""
   };
 }

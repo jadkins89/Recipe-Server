@@ -44,14 +44,17 @@ router.post("/scrape", (req, res, next) => {
 });
 
 router.get("/find/:recipeId", (req, res, next) => {
-  console.log("hit the recipe id");
   let id = req.params.recipeId;
   Recipe.findById(id)
     .then(recipe => {
       res.send(recipe);
     })
     .catch(error => {
-      res.send(error);
+      if (error.message === "No Results") {
+        res.status("404").send(error);
+      } else {
+        next(error);
+      }
     });
 });
 

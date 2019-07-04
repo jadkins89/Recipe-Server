@@ -32,7 +32,6 @@ app.use(
 // Error Handling
 app.use((err, req, res, next) => {
   res.status(err.status || 500);
-  console.log(err.message);
   res.json({
     message: err.message,
     error: req.app.get("env") === "development" ? err : {}
