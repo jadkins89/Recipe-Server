@@ -7,10 +7,12 @@ const parseDomain = require("parse-domain");
 
 const allRecipes = require("../scrapers/allrecipes");
 const foodNetwork = require("../scrapers/foodNetwork");
+const ambitiousKitchen = require("../scrapers/ambitiouskitchen");
 
 const domains = {
   allrecipes: allRecipes,
-  foodnetwork: foodNetwork
+  foodnetwork: foodNetwork,
+  ambitiouskitchen: ambitiousKitchen
 };
 
 // User Model
