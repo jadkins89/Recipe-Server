@@ -45,15 +45,30 @@ router.post("/scrape", (req, res, next) => {
   }
 });
 
-router.get("/find/:recipeId", (req, res, next) => {
+router.get("/find_one/:recipeId", (req, res, next) => {
   let id = req.params.recipeId;
-  Recipe.findById(id)
+  Recipe.findOneById(id)
     .then(recipe => {
       res.send(recipe);
     })
     .catch(error => {
       if (error.message === "No Results") {
-        res.status("404").send(error);
+        res.status("204").send(error);
+      } else {
+        next(error);
+      }
+    });
+});
+
+router.get("/find_by_user_id/:userId", (req, res, next) => {
+  let id = req.params.userId;
+  Recipe.findByUserId(id)
+    .then(recipes => {
+      res.send(recipes);
+    })
+    .catch(error => {
+      if (error.message === "No Results") {
+        res.status("204").send(error);
       } else {
         next(error);
       }

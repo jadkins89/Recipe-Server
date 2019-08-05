@@ -2,7 +2,8 @@ const connection = require("./connection");
 
 module.exports = {
   create,
-  findById
+  findOneById,
+  findByUserId
 };
 
 function create(recipe, user_id) {
@@ -29,9 +30,7 @@ function create(recipe, user_id) {
   });
 }
 
-function findByUser() {}
-
-function findById(id) {
+function findOneById(id) {
   let recipe = {};
   return new Promise((resolve, reject) => {
     Promise.all([
@@ -49,6 +48,23 @@ function findById(id) {
       .catch(error => {
         reject(error);
       });
+  });
+}
+
+function findByUserId(id) {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT id, name FROM users_recipes 
+       JOIN recipes ON users_recipes.Recipes_id=recipes.id 
+       WHERE Users_id=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
   });
 }
 
