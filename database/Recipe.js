@@ -3,7 +3,8 @@ const connection = require("./connection");
 module.exports = {
   create,
   findOneById,
-  findByUserId
+  findByUserId,
+  findFavorites
 };
 
 function create(recipe, user_id) {
@@ -57,6 +58,23 @@ function findByUserId(id) {
       `SELECT id, name FROM users_recipes 
        JOIN recipes ON users_recipes.Recipes_id=recipes.id 
        WHERE Users_id=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+}
+
+function findFavorites(id) {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT id, name FROM users_recipes 
+       JOIN recipes ON users_recipes.Recipes_id=recipes.id 
+       WHERE Users_id=${id} AND favorite=1`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -124,10 +142,13 @@ function addArrayItem(id, tableName, array) {
   });
 }
 
-function addUsersRecipes(user_id, recipe_id) {
+function addUsersRecipes(user_id, recipe_id, favorite) {
+  if (!favorite) {
+    favorite = false;
+  }
   return new Promise((resolve, reject) => {
     connection.query(
-      `INSERT INTO users_recipes VALUES (${user_id}, ${recipe_id})`,
+      `INSERT INTO users_recipes VALUES (${user_id}, ${recipe_id}, ${favorite})`,
       (error, results, fields) => {
         if (error) {
           reject(error);

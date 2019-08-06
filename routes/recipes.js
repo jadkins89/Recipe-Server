@@ -75,4 +75,19 @@ router.get("/find_by_user_id/:userId", (req, res, next) => {
     });
 });
 
+router.get("/find_favorites/:userId", (req, res, next) => {
+  let id = req.params.userId;
+  Recipe.findFavorites(id)
+    .then(recipes => {
+      res.send(recipes);
+    })
+    .catch(error => {
+      if (error.message === "No Results") {
+        res.status("204").send(error);
+      } else {
+        next(error);
+      }
+    });
+});
+
 module.exports = router;
