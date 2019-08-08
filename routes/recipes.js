@@ -19,7 +19,7 @@ const domains = {
 const Recipe = require("../database/Recipe");
 
 router.post("/add", (req, res, next) => {
-  var { recipe, user_id } = req.body;
+  const { recipe, user_id } = req.body;
   Recipe.create(recipe, user_id)
     .then(results => {
       res.send(results);
@@ -30,7 +30,7 @@ router.post("/add", (req, res, next) => {
 });
 
 router.post("/scrape", (req, res, next) => {
-  var { url } = req.body;
+  const { url } = req.body;
   let domain = parseDomain(url).domain;
   if (domains[domain] === undefined) {
     next(new Error("Site not yet supported, please enter manually below"));
@@ -87,6 +87,33 @@ router.get("/find_favorites/:userId", (req, res, next) => {
       } else {
         next(error);
       }
+    });
+});
+
+router.post("/set_favorite", (req, res, next) => {
+  const { user_id, recipe_id, value } = req.body;
+  Recipe.setFavorite(user_id, recipe_id, value)
+    .then(results => {
+      res.send(results);
+    })
+    .catch(error => {
+      res.send(error);
+    });
+});
+
+router.get("/is_favorite/:userId/:recipeId", (req, res, next) => {
+  let userId = req.params.userId;
+  let recipeId = req.params.recipeId;
+  Recipe.isFavorite(userId, recipeId)
+    .then(result => {
+      if (result[0].favorite) {
+        res.send(true);
+      } else {
+        res.send(false);
+      }
+    })
+    .catch(error => {
+      res.send(error);
     });
 });
 

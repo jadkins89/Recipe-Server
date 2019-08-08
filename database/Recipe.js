@@ -4,7 +4,9 @@ module.exports = {
   create,
   findOneById,
   findByUserId,
-  findFavorites
+  findFavorites,
+  setFavorite,
+  isFavorite
 };
 
 function create(recipe, user_id) {
@@ -55,7 +57,7 @@ function findOneById(id) {
 function findByUserId(id) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT id, name FROM users_recipes 
+      `SELECT id, name, favorite FROM users_recipes 
        JOIN recipes ON users_recipes.Recipes_id=recipes.id 
        WHERE Users_id=${id}`,
       (error, results, fields) => {
@@ -75,6 +77,36 @@ function findFavorites(id) {
       `SELECT id, name FROM users_recipes 
        JOIN recipes ON users_recipes.Recipes_id=recipes.id 
        WHERE Users_id=${id} AND favorite=1`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+}
+
+function setFavorite(user_id, recipe_id, value) {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `UPDATE users_recipes SET favorite=${value} WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+}
+
+function isFavorite(user_id, recipe_id) {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT favorite FROM users_recipes WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
