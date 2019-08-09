@@ -1,60 +1,48 @@
 const connection = require("./connection");
 
-module.exports = {
-  create,
-  findOneById,
-  findByUserId,
-  findFavorites,
-  setFavorite,
-  isFavorite
-};
-
-function create(recipe, user_id) {
+const create = async (recipe, user_id) => {
   const { name, time, ingredients, instructions } = recipe;
-  return new Promise(function(resolve, reject) {
-    addRecipe(name)
-      .then(res => {
-        Promise.all([
+  return new Promise(async (resolve, reject) => {
+    try {
+      let res = await addRecipe(name);
+      try {
+        let results = await Promise.all([
           addTime(res.insertId, time),
           addArrayItem(res.insertId, "ingredients", ingredients),
           addArrayItem(res.insertId, "instructions", instructions),
           addUsersRecipes(user_id, res.insertId)
-        ])
-          .then(results => {
-            resolve(results);
-          })
-          .catch(error => {
-            reject(error);
-          });
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
-}
-
-function findOneById(id) {
-  let recipe = {};
-  return new Promise((resolve, reject) => {
-    Promise.all([
-      getOneById(id, "recipes"),
-      getOneById(id, "time"),
-      getArrayItem(id, "ingredients"),
-      getArrayItem(id, "instructions")
-    ])
-      .then(results => {
-        results.map(item => {
-          Object.assign(recipe, item);
-        });
-        resolve(recipe);
-      })
-      .catch(error => {
+        ]);
+        resolve(results);
+      } catch (error) {
         reject(error);
-      });
+      }
+    } catch (error) {
+      reject(error);
+    }
   });
-}
+};
 
-function findByUserId(id) {
+const findOneById = async id => {
+  let recipe = {};
+  return new Promise(async (resolve, reject) => {
+    try {
+      let results = await Promise.all([
+        getOneById(id, "recipes"),
+        getOneById(id, "time"),
+        getArrayItem(id, "ingredients"),
+        getArrayItem(id, "instructions")
+      ]);
+      results.map(item => {
+        Object.assign(recipe, item);
+      });
+      resolve(recipe);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const findByUserId = id => {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT id, name, favorite FROM users_recipes 
@@ -69,9 +57,9 @@ function findByUserId(id) {
       }
     );
   });
-}
+};
 
-function findFavorites(id) {
+const findFavorites = id => {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT id, name FROM users_recipes 
@@ -86,9 +74,9 @@ function findFavorites(id) {
       }
     );
   });
-}
+};
 
-function setFavorite(user_id, recipe_id, value) {
+const setFavorite = (user_id, recipe_id, value) => {
   return new Promise((resolve, reject) => {
     connection.query(
       `UPDATE users_recipes SET favorite=${value} WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
@@ -101,9 +89,9 @@ function setFavorite(user_id, recipe_id, value) {
       }
     );
   });
-}
+};
 
-function isFavorite(user_id, recipe_id) {
+const isFavorite = (user_id, recipe_id) => {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT favorite FROM users_recipes WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
@@ -116,10 +104,16 @@ function isFavorite(user_id, recipe_id) {
       }
     );
   });
-}
+};
+
+// async function UsersRecipesExists(user_id, recipe_id) {
+//   return await connection.query(
+//
+//   )
+// }
 
 // Utility Functions
-function addRecipe(name) {
+const addRecipe = name => {
   name = name.replace("'", "''");
   return new Promise((resolve, reject) => {
     connection.query(
@@ -133,9 +127,9 @@ function addRecipe(name) {
       }
     );
   });
-}
+};
 
-function addTime(id, time) {
+const addTime = (id, time) => {
   if (!id) {
     return Promise.reject();
   }
@@ -153,9 +147,9 @@ function addTime(id, time) {
       }
     );
   });
-}
+};
 
-function addArrayItem(id, tableName, array) {
+const addArrayItem = (id, tableName, array) => {
   var colName = tableName.slice(0, -1);
   var query = `INSERT INTO ${tableName} (order_id, ${colName}, recipe_id) VALUES `;
   array.forEach((item, index) => {
@@ -172,9 +166,9 @@ function addArrayItem(id, tableName, array) {
       }
     });
   });
-}
+};
 
-function addUsersRecipes(user_id, recipe_id, favorite) {
+const addUsersRecipes = (user_id, recipe_id, favorite) => {
   if (!favorite) {
     favorite = false;
   }
@@ -190,9 +184,9 @@ function addUsersRecipes(user_id, recipe_id, favorite) {
       }
     );
   });
-}
+};
 
-function getArrayItem(recipe_id, tableName) {
+const getArrayItem = (recipe_id, tableName) => {
   var itemName = tableName.slice(0, -1);
   return new Promise((resolve, reject) => {
     connection.query(
@@ -213,9 +207,9 @@ function getArrayItem(recipe_id, tableName) {
       }
     );
   });
-}
+};
 
-function getOneById(id, tableName) {
+const getOneById = (id, tableName) => {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT * FROM ${tableName} WHERE id=${id}`,
@@ -237,4 +231,13 @@ function getOneById(id, tableName) {
       }
     );
   });
-}
+};
+
+module.exports = {
+  create,
+  findOneById,
+  findByUserId,
+  findFavorites,
+  setFavorite,
+  isFavorite
+};

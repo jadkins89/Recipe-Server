@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../database/User");
 
 // Register Handle
-router.post("/register", (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
   let errors = [];
 
@@ -26,31 +26,32 @@ router.post("/register", (req, res, next) => {
     next(new Error(errors));
   } else {
     // Validation passed
-    User.findOne(email).then(user => {
-      if (user) {
-        // User exists
-        errors.push({ msg: "Email is already registered" });
-        next(new Error(errors));
-      } else {
-        const newUser = {
-          firstName,
-          lastName,
-          email,
-          password
-        };
-        bcrypt.genSalt(10, (err, salt) =>
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            newUser.password = hash;
-            User.create(newUser)
-              .then(user => {
-                res.send("✅");
-              })
-              .catch(err => console.log(err));
-          })
-        );
-      }
-    });
+    let user = await User.findOne(email);
+    if (user) {
+      // User exists
+      errors.push({ msg: "Email is already registered" });
+      next(new Error(errors));
+    } else {
+      const newUser = {
+        firstName,
+        lastName,
+        email,
+        password
+      };
+      bcrypt.genSalt(10, (err, salt) =>
+        bcrypt.hash(newUser.password, salt, async (err, hash) => {
+          if (err) throw err;
+          newUser.password = hash;
+          try {
+            await User.create(newUser);
+            delete newUser.password;
+            res.send(newUser);
+          } catch (err) {
+            console.log(err);
+          }
+        })
+      );
+    }
   }
 });
 

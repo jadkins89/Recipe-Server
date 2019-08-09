@@ -1,7 +1,7 @@
 const connection = require("./connection");
 
 module.exports = {
-  findOne: function(email) {
+  findOne: email => {
     return new Promise(function(resolve, reject) {
       connection.query(
         "SELECT * FROM users WHERE email = ?",
@@ -16,7 +16,7 @@ module.exports = {
       );
     });
   },
-  findById: function(id) {
+  findById: id => {
     return new Promise(function(resolve, reject) {
       connection.query(
         "SELECT * FROM users WHERE id = ?",
@@ -31,7 +31,7 @@ module.exports = {
       );
     });
   },
-  create: function(newUser) {
+  create: newUser => {
     return new Promise(function(resolve, reject) {
       connection.query(
         "INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
