@@ -100,7 +100,7 @@ router.get("/is_favorite/:userId/:recipeId", async (req, res, next) => {
   let recipeId = req.params.recipeId;
   try {
     let results = await Recipe.isFavorite(userId, recipeId);
-    if (result[0].favorite) {
+    if (results[0].favorite) {
       res.send(true);
     } else {
       res.send(false);
