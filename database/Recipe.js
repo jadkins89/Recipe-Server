@@ -1,15 +1,15 @@
 const connection = require("./connection");
 
-const create = async (recipe, user_id) => {
-  const { name, time, ingredients, instructions } = recipe;
+const create = async (recipe, user_id, original_id) => {
+  const { name, time, ingredients, instructions, url, modified } = recipe;
   return new Promise(async (resolve, reject) => {
     try {
-      let res = await addRecipe(name);
+      let res = await addRecipe(name, url, modified, original_id);
       try {
         let results = await Promise.all([
           addTime(res.insertId, time),
-          addArrayItem(res.insertId, "ingredients", ingredients),
-          addArrayItem(res.insertId, "instructions", instructions),
+          addArrayItems(res.insertId, "ingredients", ingredients),
+          addArrayItems(res.insertId, "instructions", instructions),
           addUsersRecipes(user_id, res.insertId)
         ]);
         resolve(results);
@@ -17,6 +17,45 @@ const create = async (recipe, user_id) => {
         reject(error);
       }
     } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const createOrUpdate = (recipe, recipe_id, user_id) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let usersRecipes = await getUsersRecipes(recipe_id);
+      const { url, modified } = recipe;
+      // If usersRecipes is unique and recipe isn't from a URL or has been modified, simply update the current recipe
+      if (usersRecipes.length === 1 && (!url || modified)) {
+        const { name, time, ingredients, instructions } = recipe;
+        let updatePromiseList = [];
+        updatePromiseList.push(
+          updateRecipe(recipe_id, name, url, true),
+          updateTime(recipe_id, time),
+          updateArrayItems(recipe_id, "ingredients", ingredients),
+          updateArrayItems(recipe_id, "instructions", instructions)
+        );
+        try {
+          let results = await Promise.all(updatePromiseList);
+          resolve(results);
+        } catch (error) {
+          // Error with updating recipe
+          reject(error);
+        }
+      } else {
+        recipe.modified = true;
+        try {
+          let response = await create(recipe, user_id, recipe_id);
+          resolve(response);
+        } catch (error) {
+          // Error with creation of recipe
+          reject(error);
+        }
+      }
+    } catch (error) {
+      // Error with usersRecipes query
       reject(error);
     }
   });
@@ -106,18 +145,50 @@ const isFavorite = (user_id, recipe_id) => {
   });
 };
 
-// async function UsersRecipesExists(user_id, recipe_id) {
-//   return await connection.query(
-//
-//   )
-// }
+const getUsersRecipes = recipe_id => {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT * FROM users_recipes WHERE Recipes_id=${recipe_id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+};
 
 // Utility Functions
-const addRecipe = name => {
+const addRecipe = (name, url, modified, original_id) => {
   name = name.replace("'", "''");
   return new Promise((resolve, reject) => {
     connection.query(
-      `INSERT INTO recipes (name) VALUES ('${name}')`,
+      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${original_id})`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+};
+
+const updateRecipe = (id, name, url, modified, original_id = null) => {
+  name = name.replace("'", "''");
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `UPDATE recipes 
+      SET
+        name='${name}',
+        url=${url},
+        modified=${modified},
+        original_id=${original_id}
+      WHERE
+        id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -149,9 +220,35 @@ const addTime = (id, time) => {
   });
 };
 
-const addArrayItem = (id, tableName, array) => {
-  var colName = tableName.slice(0, -1);
-  var query = `INSERT INTO ${tableName} (order_id, ${colName}, recipe_id) VALUES `;
+const updateTime = (id, time) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let results = await Promise.all([deleteTime(id), addTime(id, time)]);
+      resolve(results);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const deleteTime = id => {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `DELETE FROM time WHERE id=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+};
+
+const addArrayItems = (id, tableName, array) => {
+  let colName = tableName.slice(0, -1);
+  let query = `INSERT INTO ${tableName} (order_id, ${colName}, recipe_id) VALUES `;
   array.forEach((item, index) => {
     item = item.replace("'", "''");
     query += `(${index}, '${item}', ${id}), `;
@@ -165,6 +262,35 @@ const addArrayItem = (id, tableName, array) => {
         resolve(results);
       }
     });
+  });
+};
+
+const updateArrayItems = (id, tableName, array) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let results = await Promise.all([
+        deleteArrayItems(id, tableName),
+        addArrayItems(id, tableName, array)
+      ]);
+      resolve(results);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const deleteArrayItems = (id, tableName) => {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `DELETE FROM ${tableName} WHERE recipe_id=${id}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
   });
 };
 
@@ -222,6 +348,8 @@ const getOneById = (id, tableName) => {
             reject(new Error("No Results"));
           } else if (tableName === "recipes") {
             resultObj.name = results[0].name;
+            resultObj.url = results[0].url;
+            resultObj.modified = results[0].modified;
           } else {
             delete results[0].id;
             resultObj.time = JSON.parse(JSON.stringify(results[0]));
@@ -235,6 +363,7 @@ const getOneById = (id, tableName) => {
 
 module.exports = {
   create,
+  createOrUpdate,
   findOneById,
   findByUserId,
   findFavorites,

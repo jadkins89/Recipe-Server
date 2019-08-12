@@ -82,6 +82,7 @@ const ambitiousKitchen = async url => {
       Recipe.time.prep = $("time[itemprop=prepTime]").text() || "";
       Recipe.time.cook = $("time[itemprop=cookTime]").text() || "";
       Recipe.time.ready = $("time[itemprop=totalTime]").text() || "";
+      Recipe.url = url;
 
       resolve(Recipe);
     });

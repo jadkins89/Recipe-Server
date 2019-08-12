@@ -3,7 +3,10 @@ const cheerio = require("cheerio");
 var RecipeSchema = require("./recipe-schema");
 
 const allRecipes = url => {
-  var Recipe = new RecipeSchema();
+  let Recipe = new RecipeSchema();
+  // Removing search parameters from url
+  url = url.split("?")[0];
+
   return new Promise((resolve, reject) => {
     request(url, (error, response, html) => {
       if (!error && response.statusCode == 200) {
@@ -32,6 +35,7 @@ const allRecipes = url => {
         Recipe.time.prep = $("time[itemprop=prepTime]").text() || "";
         Recipe.time.cook = $("time[itemprop=cookTime]").text() || "";
         Recipe.time.ready = $("time[itemprop=totalTime]").text() || "";
+        Recipe.url = url;
 
         resolve(Recipe);
       } else {

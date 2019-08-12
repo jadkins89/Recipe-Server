@@ -21,7 +21,17 @@ const Recipe = require("../database/Recipe");
 router.post("/add", async (req, res, next) => {
   const { recipe, user_id } = req.body;
   try {
-    let results = Recipe.create(recipe, user_id);
+    let results = await Recipe.create(recipe, user_id);
+    res.send(results);
+  } catch (error) {
+    res.send(error);
+  }
+});
+
+router.post("/create_or_update", async (req, res, next) => {
+  const { recipe, recipe_id, user_id } = req.body;
+  try {
+    let results = await Recipe.createOrUpdate(recipe, recipe_id, user_id);
     res.send(results);
   } catch (error) {
     res.send(error);

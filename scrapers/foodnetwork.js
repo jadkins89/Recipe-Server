@@ -52,6 +52,7 @@ const foodNetwork = url => {
             default:
           }
         });
+        Recipe.url = url;
 
         resolve(Recipe);
       } else {
