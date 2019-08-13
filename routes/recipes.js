@@ -24,7 +24,7 @@ router.post("/add", async (req, res, next) => {
     let results = await Recipe.create(recipe, user_id);
     res.send(results);
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 });
 
@@ -34,9 +34,23 @@ router.post("/create_or_update", async (req, res, next) => {
     let results = await Recipe.createOrUpdate(recipe, recipe_id, user_id);
     res.send(results);
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 });
+
+router.delete(
+  "/delete_users_recipes/:recipeId/:userId",
+  async (req, res, next) => {
+    let recipeId = req.params.recipeId;
+    let userId = req.params.userId;
+    try {
+      let results = await Recipe.deleteUsersRecipes(recipeId, userId);
+      res.send(results);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.post("/scrape", async (req, res, next) => {
   const { url } = req.body;
@@ -48,7 +62,7 @@ router.post("/scrape", async (req, res, next) => {
       let recipe = await domains[domain](url);
       res.send(recipe);
     } catch (error) {
-      res.send(error);
+      next(error);
     }
   }
 });
@@ -101,7 +115,7 @@ router.post("/set_favorite", async (req, res, next) => {
     let results = await Recipe.setFavorite(user_id, recipe_id, value);
     res.send(results);
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 });
 
@@ -116,7 +130,7 @@ router.get("/is_favorite/:userId/:recipeId", async (req, res, next) => {
       res.send(false);
     }
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 });
 

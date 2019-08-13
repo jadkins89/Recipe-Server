@@ -5,17 +5,13 @@ const create = async (recipe, user_id, original_id) => {
   return new Promise(async (resolve, reject) => {
     try {
       let res = await addRecipe(name, url, modified, original_id);
-      try {
-        let results = await Promise.all([
-          addTime(res.insertId, time),
-          addArrayItems(res.insertId, "ingredients", ingredients),
-          addArrayItems(res.insertId, "instructions", instructions),
-          addUsersRecipes(user_id, res.insertId)
-        ]);
-        resolve(results);
-      } catch (error) {
-        reject(error);
-      }
+      let results = await Promise.all([
+        addTime(res.insertId, time),
+        addArrayItems(res.insertId, "ingredients", ingredients),
+        addArrayItems(res.insertId, "instructions", instructions),
+        addUsersRecipes(user_id, res.insertId)
+      ]);
+      resolve(results);
     } catch (error) {
       reject(error);
     }
@@ -23,6 +19,7 @@ const create = async (recipe, user_id, original_id) => {
 };
 
 const createOrUpdate = (recipe, recipe_id, user_id) => {
+  console.log(recipe, recipe_id, user_id);
   return new Promise(async (resolve, reject) => {
     try {
       let usersRecipes = await getUsersRecipes(recipe_id);
@@ -30,32 +27,48 @@ const createOrUpdate = (recipe, recipe_id, user_id) => {
       // If usersRecipes is unique and recipe isn't from a URL or has been modified, simply update the current recipe
       if (usersRecipes.length === 1 && (!url || modified)) {
         const { name, time, ingredients, instructions } = recipe;
-        let updatePromiseList = [];
-        updatePromiseList.push(
+        let results = await Promise.all([
           updateRecipe(recipe_id, name, url, true),
           updateTime(recipe_id, time),
           updateArrayItems(recipe_id, "ingredients", ingredients),
           updateArrayItems(recipe_id, "instructions", instructions)
-        );
-        try {
-          let results = await Promise.all(updatePromiseList);
-          resolve(results);
-        } catch (error) {
-          // Error with updating recipe
-          reject(error);
-        }
+        ]);
+        resolve(results);
+        // Create new recipe otherwise, maintaining the original
       } else {
         recipe.modified = true;
-        try {
-          let response = await create(recipe, user_id, recipe_id);
-          resolve(response);
-        } catch (error) {
-          // Error with creation of recipe
-          reject(error);
-        }
+        let response = await create(recipe, user_id, recipe_id);
+        resolve(response);
       }
     } catch (error) {
-      // Error with usersRecipes query
+      reject(error);
+    }
+  });
+};
+
+const deleteUsersRecipes = (recipeId, userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let usersRecipes = await getUsersRecipes(recipeId);
+      // Delete entry
+      if (usersRecipes.length > 1) {
+        connection.query(
+          `DELETE FROM users_recipes WHERE Recipes_id=${recipeId} AND Users_id=${userId}`,
+          (error, results, fields) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(results);
+            }
+          }
+        );
+        // If only entry, delete all recipe data
+      } else if (usersRecipes.length === 1) {
+        let results = await delete resolve(results);
+      } else {
+        throw new Error(`No users_recipes row for recipe_id: ${recipeId}`);
+      }
+    } catch (error) {
       reject(error);
     }
   });
@@ -361,9 +374,25 @@ const getOneById = (id, tableName) => {
   });
 };
 
+const deleteRecipe = recipeId => {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `DELETE FROM recipes WHERE id=${recipeId}`,
+      (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+};
+
 module.exports = {
   create,
   createOrUpdate,
+  deleteUsersRecipes,
   findOneById,
   findByUserId,
   findFavorites,
