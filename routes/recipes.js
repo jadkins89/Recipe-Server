@@ -43,11 +43,15 @@ router.delete(
   async (req, res, next) => {
     let recipeId = req.params.recipeId;
     let userId = req.params.userId;
-    try {
-      let results = await Recipe.deleteUsersRecipes(recipeId, userId);
-      res.send(results);
-    } catch (error) {
-      next(error);
+    if (req.user.id != userId) {
+      res.status(403).send("User ID does not match.");
+    } else {
+      try {
+        let results = await Recipe.deleteUsersRecipes(recipeId, userId);
+        res.send(results);
+      } catch (error) {
+        next(error);
+      }
     }
   }
 );

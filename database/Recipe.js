@@ -19,7 +19,6 @@ const create = async (recipe, user_id, original_id) => {
 };
 
 const createOrUpdate = (recipe, recipe_id, user_id) => {
-  console.log(recipe, recipe_id, user_id);
   return new Promise(async (resolve, reject) => {
     try {
       let usersRecipes = await getUsersRecipes(recipe_id);
@@ -53,7 +52,7 @@ const deleteUsersRecipes = (recipeId, userId) => {
       // Delete entry
       if (usersRecipes.length > 1) {
         connection.query(
-          `DELETE FROM users_recipes WHERE Recipes_id=${recipeId} AND Users_id=${userId}`,
+          `DELETE FROM users_recipes WHERE Users_id=${userId} AND Recipes_id=${recipeId}`,
           (error, results, fields) => {
             if (error) {
               reject(error);
@@ -64,7 +63,8 @@ const deleteUsersRecipes = (recipeId, userId) => {
         );
         // If only entry, delete all recipe data
       } else if (usersRecipes.length === 1) {
-        let results = await delete resolve(results);
+        let results = await deleteRecipe(recipeId);
+        resolve(results);
       } else {
         throw new Error(`No users_recipes row for recipe_id: ${recipeId}`);
       }
@@ -143,10 +143,10 @@ const setFavorite = (user_id, recipe_id, value) => {
   });
 };
 
-const isFavorite = (user_id, recipe_id) => {
+const isFavorite = (userId, recipeId) => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT favorite FROM users_recipes WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
+      `SELECT favorite FROM users_recipes WHERE Users_id=${userId} AND Recipes_id=${recipeId}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -158,10 +158,10 @@ const isFavorite = (user_id, recipe_id) => {
   });
 };
 
-const getUsersRecipes = recipe_id => {
+const getUsersRecipes = recipeId => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT * FROM users_recipes WHERE Recipes_id=${recipe_id}`,
+      `SELECT * FROM users_recipes WHERE Recipes_id=${recipeId}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -174,11 +174,11 @@ const getUsersRecipes = recipe_id => {
 };
 
 // Utility Functions
-const addRecipe = (name, url, modified, original_id) => {
+const addRecipe = (name, url, modified, originalId) => {
   name = name.replace("'", "''");
   return new Promise((resolve, reject) => {
     connection.query(
-      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${original_id})`,
+      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${originalId})`,
       (error, results, fields) => {
         if (error) {
           reject(error);
