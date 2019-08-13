@@ -191,7 +191,7 @@ const addRecipe = (name, url, modified, originalId) => {
 };
 
 const updateRecipe = (id, name, url, modified, original_id = null) => {
-  name = name.replace("'", "''");
+  name = name.replace(/'/g, "''");
   return new Promise((resolve, reject) => {
     connection.query(
       `UPDATE recipes 
