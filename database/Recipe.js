@@ -18,25 +18,28 @@ const create = async (recipe, user_id, original_id) => {
   });
 };
 
-const createOrUpdate = (recipe, recipe_id, user_id) => {
+const createOrUpdate = (recipe, recipeId, userId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let usersRecipes = await getUsersRecipes(recipe_id);
+      let usersRecipes = await getUsersRecipes(recipeId);
       const { url, modified } = recipe;
       // If usersRecipes is unique and recipe isn't from a URL or has been modified, simply update the current recipe
       if (usersRecipes.length === 1 && (!url || modified)) {
         const { name, time, ingredients, instructions } = recipe;
         let results = await Promise.all([
-          updateRecipe(recipe_id, name, url, true),
-          updateTime(recipe_id, time),
-          updateArrayItems(recipe_id, "ingredients", ingredients),
-          updateArrayItems(recipe_id, "instructions", instructions)
+          updateRecipe(recipeId, name, url, true),
+          updateTime(recipeId, time),
+          updateArrayItems(recipeId, "ingredients", ingredients),
+          updateArrayItems(recipeId, "instructions", instructions)
         ]);
         resolve(results);
         // Create new recipe otherwise, maintaining the original
       } else {
         recipe.modified = true;
-        let response = await create(recipe, user_id, recipe_id);
+        let response = await Promise.all([
+          create(recipe, userId, recipeId),
+          deleteUsersRecipes(recipeId, userId)
+        ]);
         resolve(response);
       }
     } catch (error) {
@@ -179,36 +182,28 @@ const getUsersRecipes = recipeId => {
 // Utility Functions
 const addRecipe = (name, url, modified, originalId = null) => {
   name = name.replace(/'/g, "''");
-  let query;
-  if (url) {
-    query = `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', '${url}', ${modified}, ${originalId})`;
-  } else {
-    query = `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${originalId})`;
-  }
+  let urlQuery = url ? `'${url}'` : "null";
   return new Promise((resolve, reject) => {
-    connection.query(query, (error, results, fields) => {
-      if (error) {
-        console.log(error);
-        reject(error);
-      } else {
-        resolve(results);
+    connection.query(
+      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${urlQuery}, ${modified}, ${originalId})`,
+      (error, results, fields) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          resolve(results);
+        }
       }
-    });
+    );
   });
 };
 
 const updateRecipe = (id, name, url, modified, originalId = null) => {
   name = name.replace(/'/g, "''");
+  let urlQuery = url ? `'${url}'` : "null";
   return new Promise((resolve, reject) => {
     connection.query(
-      `UPDATE recipes 
-      SET
-        name='${name}',
-        url=${url},
-        modified=${modified},
-        original_id=${originalId}
-      WHERE
-        id=${id}`,
+      `UPDATE recipes SET name='${name}', url=${urlQuery}, modified=${modified}, original_id=${originalId} WHERE recipe_id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -371,7 +366,7 @@ const getOneById = (id, tableName) => {
             resultObj.url = results[0].url;
             resultObj.modified = results[0].modified;
           } else {
-            delete results[0].id;
+            delete results[0].recipe_id;
             resultObj.time = JSON.parse(JSON.stringify(results[0]));
           }
           resolve(resultObj);
@@ -384,7 +379,7 @@ const getOneById = (id, tableName) => {
 const deleteRecipe = recipeId => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `DELETE FROM recipes WHERE id=${recipeId}`,
+      `DELETE FROM recipes WHERE recipe_id=${recipeId}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
