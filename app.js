@@ -28,6 +28,11 @@ app.use(
   passport.authenticate("jwt", { session: false }),
   require("./routes/auth")
 );
+app.use(
+  "/relationships",
+  // passport.authenticate("jwt", { session: false }),
+  require("./routes/relationships")
+);
 
 // Error Handling
 app.use((err, req, res, next) => {

@@ -52,7 +52,7 @@ const deleteUsersRecipes = (recipeId, userId) => {
       // Delete entry
       if (usersRecipes.length > 1) {
         connection.query(
-          `DELETE FROM users_recipes WHERE Users_id=${userId} AND Recipes_id=${recipeId}`,
+          `DELETE FROM users_recipes WHERE user_id=${userId} AND recipe_id=${recipeId}`,
           (error, results, fields) => {
             if (error) {
               reject(error);
@@ -89,6 +89,7 @@ const findOneById = async id => {
       });
       resolve(recipe);
     } catch (error) {
+      console.log(error);
       reject(error);
     }
   });
@@ -97,9 +98,9 @@ const findOneById = async id => {
 const findByUserId = id => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT id, name, favorite FROM users_recipes 
-       JOIN recipes ON users_recipes.Recipes_id=recipes.id 
-       WHERE Users_id=${id}`,
+      `SELECT recipes.recipe_id, name, favorite FROM users_recipes 
+       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id 
+       WHERE user_id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -114,11 +115,12 @@ const findByUserId = id => {
 const findFavorites = id => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT id, name FROM users_recipes 
-       JOIN recipes ON users_recipes.Recipes_id=recipes.id 
-       WHERE Users_id=${id} AND favorite=1`,
+      `SELECT recipes.recipe_id, name FROM users_recipes 
+       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id 
+       WHERE user_id=${id} AND favorite=1`,
       (error, results, fields) => {
         if (error) {
+          console.log(error);
           reject(error);
         } else {
           resolve(results);
@@ -128,11 +130,12 @@ const findFavorites = id => {
   });
 };
 
-const setFavorite = (user_id, recipe_id, value) => {
+const setFavorite = (userId, recipeId, value) => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `UPDATE users_recipes SET favorite=${value} WHERE Users_id=${user_id} AND Recipes_id=${recipe_id}`,
+      `UPDATE users_recipes SET favorite=${value} WHERE user_id=${userId} AND recipe_id=${recipeId}`,
       (error, results, fields) => {
+        console.log(error, results);
         if (error) {
           reject(error);
         } else {
@@ -146,7 +149,7 @@ const setFavorite = (user_id, recipe_id, value) => {
 const isFavorite = (userId, recipeId) => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT favorite FROM users_recipes WHERE Users_id=${userId} AND Recipes_id=${recipeId}`,
+      `SELECT favorite FROM users_recipes WHERE user_id=${userId} AND recipe_id=${recipeId}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -161,7 +164,7 @@ const isFavorite = (userId, recipeId) => {
 const getUsersRecipes = recipeId => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT * FROM users_recipes WHERE Recipes_id=${recipeId}`,
+      `SELECT * FROM users_recipes WHERE recipe_id=${recipeId}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -174,23 +177,27 @@ const getUsersRecipes = recipeId => {
 };
 
 // Utility Functions
-const addRecipe = (name, url, modified, originalId) => {
-  name = name.replace("'", "''");
+const addRecipe = (name, url, modified, originalId = null) => {
+  name = name.replace(/'/g, "''");
+  let query;
+  if (url) {
+    query = `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', '${url}', ${modified}, ${originalId})`;
+  } else {
+    query = `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${originalId})`;
+  }
   return new Promise((resolve, reject) => {
-    connection.query(
-      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${url}, ${modified}, ${originalId})`,
-      (error, results, fields) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results);
-        }
+    connection.query(query, (error, results, fields) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        resolve(results);
       }
-    );
+    });
   });
 };
 
-const updateRecipe = (id, name, url, modified, original_id = null) => {
+const updateRecipe = (id, name, url, modified, originalId = null) => {
   name = name.replace(/'/g, "''");
   return new Promise((resolve, reject) => {
     connection.query(
@@ -199,7 +206,7 @@ const updateRecipe = (id, name, url, modified, original_id = null) => {
         name='${name}',
         url=${url},
         modified=${modified},
-        original_id=${original_id}
+        original_id=${originalId}
       WHERE
         id=${id}`,
       (error, results, fields) => {
@@ -220,7 +227,7 @@ const addTime = (id, time) => {
   const { prep, cook, active, inactive, total, ready } = time;
   return new Promise((resolve, reject) => {
     connection.query(
-      "INSERT INTO time (id, prep, cook, active, inactive, total, ready) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO time (recipe_id, prep, cook, active, inactive, total, ready) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [id, prep, cook, active, inactive, total, ready],
       (error, results, fields) => {
         if (error) {
@@ -247,7 +254,7 @@ const updateTime = (id, time) => {
 const deleteTime = id => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `DELETE FROM time WHERE id=${id}`,
+      `DELETE FROM time WHERE recipe_id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);
@@ -351,7 +358,7 @@ const getArrayItem = (recipe_id, tableName) => {
 const getOneById = (id, tableName) => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT * FROM ${tableName} WHERE id=${id}`,
+      `SELECT * FROM ${tableName} WHERE recipe_id=${id}`,
       (error, results, fields) => {
         if (error) {
           reject(error);

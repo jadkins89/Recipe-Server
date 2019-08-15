@@ -1,8 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcryptjs");
-const passport = require("passport");
-const jwt = require("jsonwebtoken");
 const parseDomain = require("parse-domain");
 
 const allRecipes = require("../scrapers/allrecipes");
@@ -114,9 +111,9 @@ router.get("/find_favorites/:userId", async (req, res, next) => {
 });
 
 router.post("/set_favorite", async (req, res, next) => {
-  const { user_id, recipe_id, value } = req.body;
+  const { userId, recipeId, value } = req.body;
   try {
-    let results = await Recipe.setFavorite(user_id, recipe_id, value);
+    let results = await Recipe.setFavorite(userId, recipeId, value);
     res.send(results);
   } catch (error) {
     next(error);
