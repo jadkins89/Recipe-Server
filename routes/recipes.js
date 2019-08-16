@@ -1,15 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const parseDomain = require("parse-domain");
-
-const allRecipes = require("../scrapers/allrecipes");
-const foodNetwork = require("../scrapers/foodNetwork");
-const ambitiousKitchen = require("../scrapers/ambitiouskitchen");
+const Scraper = require("recipe-scraper");
 
 const domains = {
-  allrecipes: allRecipes,
-  foodnetwork: foodNetwork,
-  ambitiouskitchen: ambitiousKitchen
+  allrecipes: Scraper.allRecipes,
+  foodnetwork: Scraper.foodNetwork,
+  ambitiouskitchen: Scraper.ambitiousKitchen
 };
 
 // User Model
