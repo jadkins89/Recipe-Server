@@ -6,7 +6,9 @@ const Scraper = require("recipe-scraper");
 const domains = {
   allrecipes: Scraper.allRecipes,
   foodnetwork: Scraper.foodNetwork,
-  ambitiouskitchen: Scraper.ambitiousKitchen
+  ambitiouskitchen: Scraper.ambitiousKitchen,
+  epicurious: Scraper.epicurious,
+  copykat: Scraper.copykat
 };
 
 // User Model
