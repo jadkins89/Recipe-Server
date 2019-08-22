@@ -22,7 +22,7 @@
     "passport-local": "^1.0.0",
     "psl": "^1.1.33",
     "puppeteer": "^1.18.1",
-    "recipe-scraper": "^1.1.5",
+    "recipe-scraper": "^1.5.0",
     "request": "^2.88.0"
   }
 }

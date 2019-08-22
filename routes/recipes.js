@@ -1,15 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const parseDomain = require("parse-domain");
-const Scraper = require("recipe-scraper");
-
-const domains = {
-  allrecipes: Scraper.allRecipes,
-  foodnetwork: Scraper.foodNetwork,
-  ambitiouskitchen: Scraper.ambitiousKitchen,
-  epicurious: Scraper.epicurious,
-  copykat: Scraper.copykat
-};
+const recipeScraper = require("recipe-scraper");
 
 // User Model
 const Recipe = require("../database/Recipe");
@@ -54,16 +46,11 @@ router.delete(
 
 router.post("/scrape", async (req, res, next) => {
   const { url } = req.body;
-  let domain = parseDomain(url).domain;
-  if (domains[domain] === undefined) {
-    next(new Error("Site not yet supported, please enter manually below"));
-  } else {
-    try {
-      let recipe = await domains[domain](url);
-      res.send(recipe);
-    } catch (error) {
-      next(error);
-    }
+  try {
+    let recipe = await recipeScraper(url);
+    res.send(recipe);
+  } catch (error) {
+    next(error);
   }
 });
 
