@@ -1,10 +1,10 @@
 const connection = require("./connection");
 
 const create = async (recipe, user_id, original_id) => {
-  const { name, time, ingredients, instructions, url, modified } = recipe;
+  const { name, time, ingredients, instructions, url, modified, image } = recipe;
   return new Promise(async (resolve, reject) => {
     try {
-      let res = await addRecipe(name, url, modified, original_id);
+      let res = await addRecipe(name, url, image, modified, original_id);
       let results = await Promise.all([
         addTime(res.insertId, time),
         addArrayItems(res.insertId, "ingredients", ingredients),
@@ -101,8 +101,9 @@ const findOneById = async id => {
 const findByUserId = id => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT recipes.recipe_id, name, favorite FROM users_recipes 
-       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id 
+      `SELECT recipes.recipe_id, recipes.image AS image, name, favorite
+       FROM users_recipes
+       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id
        WHERE user_id=${id}`,
       (error, results, fields) => {
         if (error) {
@@ -118,8 +119,8 @@ const findByUserId = id => {
 const findFavorites = id => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT recipes.recipe_id, name FROM users_recipes 
-       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id 
+      `SELECT recipes.recipe_id, name FROM users_recipes
+       JOIN recipes ON users_recipes.recipe_id=recipes.recipe_id
        WHERE user_id=${id} AND favorite=1`,
       (error, results, fields) => {
         if (error) {
@@ -180,12 +181,11 @@ const getUsersRecipes = recipeId => {
 };
 
 // Utility Functions
-const addRecipe = (name, url, modified, originalId = null) => {
+const addRecipe = (name, url, image, modified, originalId = null) => {
   name = name.replace(/'/g, "''");
-  let urlQuery = url ? `'${url}'` : "null";
   return new Promise((resolve, reject) => {
     connection.query(
-      `INSERT INTO recipes (name, url, modified, original_id) VALUES ('${name}', ${urlQuery}, ${modified}, ${originalId})`,
+      `INSERT INTO recipes (name, url, image, modified, original_id) VALUES ('${name}', '${url}', '${image}', ${modified}, ${originalId})`,
       (error, results, fields) => {
         if (error) {
           console.log(error);

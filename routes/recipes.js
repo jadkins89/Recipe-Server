@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const parseDomain = require("parse-domain");
 const recipeScraper = require("recipe-scraper");
 
 // User Model
